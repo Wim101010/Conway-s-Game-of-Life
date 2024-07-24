@@ -20,6 +20,11 @@ cells_size = (COLUMNS, ROWS)
 window_size = (int(COLUMNS*scaling_factor), int(ROWS*scaling_factor))
 screen = pygame.display.set_mode(window_size)
 pygame.display.set_caption("Conway's Game of Life")
+FPS = 100
+sec_per_step = 1
+FramePerSec = pygame.time.Clock()
+last_event_time = pygame.time.get_ticks()
+
 
 #colors
 BLACK = (0, 0, 0)
@@ -27,7 +32,7 @@ WHITE = (255, 255, 255)
 
 
 
-#
+#creation
 def create_cells(cells_size):
     cells = [0 for x in range(int(cells_size[0]*cells_size[1]))]
     return cells
@@ -92,32 +97,38 @@ def draw(position):
     pygame.draw.rect(screen, WHITE, [x*scaling_factor, y*scaling_factor, scaling_factor, scaling_factor])
 
 #starting position alive cells
-list_starting_points = input("input the starting cells as (x,y) seperated by a space: ")
-tuple_strings = list_starting_points.split()
-tuple_list = []
-for tuple_str in tuple_strings:
+#list_starting_points = input("input the starting cells as (x,y) seperated by a space: ")
+#tuple_strings = list_starting_points.split()
+#tuple_list = []
+#for tuple_str in tuple_strings:
     # Remove the parentheses and split by comma
-    tuple_elements = tuple_str.strip('()').split(',')
+    #tuple_elements = tuple_str.strip('()').split(',')
     # Convert the elements to integers and create a tuple
-    tuple_list.append((int(tuple_elements[0]), int(tuple_elements[1])))
-for starting_point in tuple_list:
-    cells[coo2ind(starting_point)]=1
-screen.fill(BLACK)
-for i, cell in enumerate(cells):
-    if cell == 1:
-        draw(i)
-pygame.display.flip()
+    #tuple_list.append((int(tuple_elements[0]), int(tuple_elements[1])))
+#for starting_point in tuple_list:
+    #cells[coo2ind(starting_point)]=1
+#pygame.display.flip()
 
-FPS = 0.5
-FramePerSec = pygame.time.Clock()
+
 
 #main loop
-running = False
-running = bool(input("Type 'True' to start the simulation: "))
+running = True
+toggle_sim = False
 while running:
+    current_time = pygame.time.get_ticks()
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                toggle_sim = not toggle_sim
+        if event.type == pygame.MOUSEBUTTONUP:
+            pos = pygame.mouse.get_pos()
+            x = pos[0]//scaling_factor
+            y = pos[1]//scaling_factor
+            new_cell = coo2ind((x,y))
+            cells[new_cell]=1
 
     #drawing
     screen.fill(BLACK)
@@ -126,8 +137,12 @@ while running:
             draw(i)
 
     #new generation
-    cells = new_gen(cells)
-
+    if toggle_sim:
+        if current_time - last_event_time >= sec_per_step*1000:
+            cells = new_gen(cells)
+            print("simulating")
+            last_event_time = current_time
+    
     FramePerSec.tick(FPS)          
 
     pygame.display.flip()
